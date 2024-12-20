@@ -6,12 +6,12 @@ import (
 )
 
 type daemonConfig struct {
-	configFile os.File
+	configFile *os.File
 }
 
 type DaemonOption func(*daemonConfig)
 
-func WithConfigFile(configFile os.File) DaemonOption {
+func WithConfigFile(configFile *os.File) DaemonOption {
 	return func(c *daemonConfig) {
 		c.configFile = configFile
 	}
