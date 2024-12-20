@@ -27,6 +27,7 @@ package clamd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -95,6 +96,43 @@ func (c *CLAMDConn) readResponse() (chan *ScanResult, *sync.WaitGroup, error) {
 		}()
 
 		for {
+			line, err := reader.ReadString('\n')
+			if err == io.EOF {
+				return
+			}
+
+			if err != nil {
+				return
+			}
+
+			line = strings.TrimRight(line, " \t\r\n")
+			ch <- parseResult(line)
+		}
+	}()
+
+	return ch, &wg, nil
+}
+
+func (c *CLAMDConn) contextReadResponse(ctx context.Context) (chan *ScanResult, *sync.WaitGroup, error) {
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	reader := bufio.NewReader(c)
+	ch := make(chan *ScanResult)
+
+	go func() {
+		defer func() {
+			close(ch)
+			wg.Done()
+		}()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
 			line, err := reader.ReadString('\n')
 			if err == io.EOF {
 				return

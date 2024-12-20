@@ -22,3 +22,8 @@ _testmain.go
 *.exe
 *.test
 *.prof
+/.idea/.gitignore
+/.idea/aws.xml
+/.idea/go-clamd.iml
+/.idea/modules.xml
+/.idea/vcs.xml

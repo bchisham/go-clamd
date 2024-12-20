@@ -26,6 +26,7 @@ SOFTWARE.
 package clamd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -101,6 +102,26 @@ func (c *Clamd) simpleCommand(command string) (chan *ScanResult, error) {
 		conn.Close()
 	}()
 
+	return ch, err
+}
+
+func (c *Clamd) contextSimpleCommand(ctx context.Context, command string) (chan *ScanResult, error) {
+	conn, err := c.newConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	err = conn.sendCommand(command)
+	if err != nil {
+		return nil, err
+	}
+
+	ch, wg, err := conn.contextReadResponse(ctx)
+
+	go func() {
+		wg.Wait()
+		conn.Close()
+	}()
 	return ch, err
 }
 
@@ -303,6 +324,60 @@ func (c *Clamd) ScanStream(r io.Reader, abort chan bool) (chan *ScanResult, erro
 	}()
 
 	return ch, nil
+}
+
+// / ContextScanStream is the same as ScanStream but with a context rather than an abort channel.
+func (c *Clamd) ContextScanStream(ctx context.Context, r io.Reader) (chan *ScanResult, error) {
+	conn, err := c.newConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			_ = conn.Close()
+		}
+	}()
+
+	err = conn.sendCommand("INSTREAM")
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		buf := make([]byte, CHUNK_SIZE)
+
+		nr, err := r.Read(buf)
+		if nr > 0 {
+			_ = conn.sendChunk(buf[0:nr])
+		}
+
+		if err != nil {
+			break
+		}
+
+	}
+
+	err = conn.sendEOF()
+	if err != nil {
+		return nil, err
+	}
+
+	ch, wg, err := conn.readResponse()
+
+	go func() {
+		wg.Wait()
+		conn.Close()
+	}()
+
+	return ch, nil
+}
+
+func (c *Clamd) ContextScanFile(ctx context.Context, path string) (chan *ScanResult, error) {
+	command := fmt.Sprintf("SCAN %s", path)
+	ch, err := c.simpleCommand(command)
+	return ch, err
 }
 
 func NewClamd(address string) *Clamd {
