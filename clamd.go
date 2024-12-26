@@ -326,8 +326,8 @@ func (c *Clamd) ScanStream(r io.Reader, abort chan bool) (chan *ScanResult, erro
 	return ch, nil
 }
 
-// / ContextScanStream is the same as ScanStream but with a context rather than an abort channel.
-func (c *Clamd) ContextScanStream(ctx context.Context, r io.Reader) (chan *ScanResult, error) {
+// / ScanStreamContext is the same as ScanStream but with a context rather than an abort channel.
+func (c *Clamd) ScanStreamContext(ctx context.Context, r io.Reader) (chan *ScanResult, error) {
 	conn, err := c.newConnection()
 	if err != nil {
 		return nil, err
@@ -374,9 +374,9 @@ func (c *Clamd) ContextScanStream(ctx context.Context, r io.Reader) (chan *ScanR
 	return ch, nil
 }
 
-func (c *Clamd) ContextScanFile(ctx context.Context, path string) (chan *ScanResult, error) {
+func (c *Clamd) ScanFileContext(ctx context.Context, path string) (chan *ScanResult, error) {
 	command := fmt.Sprintf("SCAN %s", path)
-	ch, err := c.simpleCommand(command)
+	ch, err := c.contextSimpleCommand(ctx, command)
 	return ch, err
 }
 
