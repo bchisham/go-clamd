@@ -52,10 +52,12 @@ func main() {
 	for {
 		select {
 		case <-cancelContext.Done():
-			err = fmt.Errorf("scan cancelled")
+			log.Printf("scan cancelled\n")
+			break
 		case res = <-ss:
 			if res == nil {
-				log.Fatalln("nil result")
+                log.Printf("scan complete\n")
+                break
 			}
 		}
 		switch res.Status {
