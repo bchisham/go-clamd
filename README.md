@@ -23,6 +23,7 @@ package main
 
 import (
 	"bytes"
+	"cmd/link/internal/sym"
 	"context"
 	"log"
 	"time"
@@ -35,8 +36,18 @@ func main() {
 		err error
 		res *clamd.ScanResult
 	)
+
+	// Start a clamd server
+	srv := clamd.NewDaemon(clamd.WithConfigFile("/etc/clamd.conf"))
+	err := srv.Start()
+	if err != nil {
+		log.Fatalf("error starting clamd: %s\n", err)
+	}
+	defer func() { srv.Stop() }()
+
 	// Connect to clamd server through a unix socket
 	c := clamd.NewClamd("/tmp/clamd.socket")
+
 	// scan a stream of bytes
 	reader := bytes.NewReader(clamd.EICAR)
 
@@ -45,8 +56,9 @@ func main() {
 		cancelFunc()
 
 	}()
-	ss, err := c.ContextScanStream(cancelContext, reader)
+	ss, err := c.ScanStreamContext(cancelContext, reader)
 	if err != nil {
+		
 		log.Fatalln(err)
 	}
 	for {
@@ -56,8 +68,8 @@ func main() {
 			break
 		case res = <-ss:
 			if res == nil {
-                log.Printf("scan complete\n")
-                break
+				log.Printf("scan complete\n")
+				break
 			}
 		}
 		switch res.Status {
@@ -69,6 +81,7 @@ func main() {
 			log.Fatalf("error: %s\n", res.Raw)
 		}
 	}
+
 	return
 }
 ```
