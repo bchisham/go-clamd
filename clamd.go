@@ -384,3 +384,7 @@ func NewClamd(address string) *Clamd {
 	clamd := &Clamd{address: address}
 	return clamd
 }
+
+func (r *ScanResult) String() string {
+	return r.Raw
+}
