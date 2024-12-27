@@ -23,11 +23,10 @@ package main
 
 import (
 	"bytes"
-	"cmd/link/internal/sym"
 	"context"
 	"log"
 	"time"
-	"fmt"
+
 	"github.com/bchisham/go-clamd"
 )
 
@@ -39,7 +38,7 @@ func main() {
 
 	// Start a clamd server
 	srv := clamd.NewDaemon(clamd.WithConfigFile("/etc/clamd.conf"))
-	err := srv.Start()
+	err = srv.Start()
 	if err != nil {
 		log.Fatalf("error starting clamd: %s\n", err)
 	}
@@ -58,27 +57,26 @@ func main() {
 	}()
 	ss, err := c.ScanStreamContext(cancelContext, reader)
 	if err != nil {
-		
 		log.Fatalln(err)
 	}
 	for {
 		select {
-		case <-cancelContext.Done():
-			log.Printf("scan cancelled\n")
-			break
-		case res = <-ss:
-			if res == nil {
-				log.Printf("scan complete\n")
-				break
-			}
+            case <-cancelContext.Done():
+                log.Printf("scan cancelled\n")
+                break
+            case res = <-ss:
+                if res == nil {
+                    log.Printf("scan complete\n")
+                    break
+                }
 		}
 		switch res.Status {
-		case clamd.RES_OK:
-			log.Println("no virus found")
-		case clamd.RES_FOUND:
-			log.Printf("virus found: %s\n", res.Raw)
-		case clamd.RES_ERROR, clamd.RES_PARSE_ERROR:
-			log.Fatalf("error: %s\n", res.Raw)
+            case clamd.RES_OK:
+                log.Println("no virus found")
+            case clamd.RES_FOUND:
+                log.Printf("virus found: %s\n", res.Raw)
+            case clamd.RES_ERROR, clamd.RES_PARSE_ERROR:
+                log.Fatalf("error: %s\n", res.Raw)
 		}
 	}
 
