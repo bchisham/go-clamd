@@ -3,8 +3,8 @@ go-clamd
 
 Interface to clamd (clamav daemon). You can use go-clamd to implement virus detection capabilities to your application.
 
-[![GoDoc](https://godoc.org/github.com/dutchcoders/go-clamd?status.svg)](https://godoc.org/github.com/dutchcoders/go-clamd)
-[![Build Status](https://travis-ci.org/dutchcoders/go-clamd.svg?branch=master)](https://travis-ci.org/dutchcoders/go-clamd)
+[![GoDoc](https://godoc.org/github.com/bchisham/go-clamd?status.svg)](https://godoc.org/github.com/bchisham/go-clamd)
+
 
 ## Installation
 
